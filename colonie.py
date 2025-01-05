@@ -55,10 +55,14 @@ class MainWindow(QMainWindow):
 
         self.im = np.where(self.image > 122, self.white, self.black)
 
-        self.im = self.black
+        self.im = self.black.copy()
         self.im[0,0] = 255
-
         self.x = torch.tensor(self.im)[None, ...].float() / 255
+        
+        self.im = self.black
+        self.im[h-1,w-1] = 255
+        self.y = torch.tensor(self.im)[None, ...].float() / 255
+
         self.b = torch.tensor(self.blocks)[None, ...].float()
         self.zeros = torch.zeros_like(self.x)
         self.ones = torch.ones_like(self.x)
@@ -72,26 +76,29 @@ class MainWindow(QMainWindow):
         self.conv = nn.Conv2d(nb_channels, 1, 3, bias=False, padding='same')
         with torch.no_grad():
             self.conv.weight = nn.Parameter(weights)
-        
-        
+
     def step(self) -> None :
         self.count += 1;
-        with torch.no_grad():
-            z0 = self.x
-            z = self.conv(z0)
-            z1 = torch.clamp(z, self.zeros, self.ones)
-            pro = z1 - z0
-            rr = torch.randn_like(pro) > 0.5
-            z2 = pro * rr
-            z3 = z0 + z2
-            #EKON(output.shape, self.zeros.shape, self.ones.shape)
+        def process(xy) :
+            with torch.no_grad():
+                z0 = xy
+                z = self.conv(z0)
+                z1 = torch.clamp(z, self.zeros, self.ones)
+                pro = z1 - z0
+                rr = torch.randn_like(pro) > 0.5
+                z2 = pro * rr
+                z3 = z0 + z2
+                #EKON(output.shape, self.zeros.shape, self.ones.shape)
+                z3 = z3 * self.blocks
+            return z3
 
-            z3 = z3 * self.blocks
-            self.x = z3
+        self.x = process(self.x)
+        self.y = process(self.y)
+        
         #EKOX(output.shape)
         imm = self.im.copy()
         #EKOX(torch.mean(self.x))
-        self.im = imm = self.x.detach().byte().numpy()[0, ...] * 255
+        self.im = imm = self.y.detach().byte().numpy()[0, ...] * 255
         #EKOX(np.mean(imm))
         #plt.imshow(imm); plt.show()
         
