@@ -1,0 +1,5 @@
+
+
+start :
+	python colonie.py
+
