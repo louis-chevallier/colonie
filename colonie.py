@@ -37,6 +37,12 @@ class MainWindow(QMainWindow):
         self.count = 0
 
         self.image = cv2.imread('shinchan.png')[:,:,0]
+        h,w = self.image.shape
+        EKON(h, w)
+        
+        self.blocks = self.image.copy() * 0 + 1
+        cv2.rectangle(self.blocks, (200, 200), (400, 400), 0, 1)
+        
         self.black = self.image * 0
         self.white  = self.black + 255
         self.back = np.where(self.image > 200, self.image, self.white)[:,:]
@@ -53,6 +59,7 @@ class MainWindow(QMainWindow):
         self.im[0,0] = 255
 
         self.x = torch.tensor(self.im)[None, ...].float() / 255
+        self.b = torch.tensor(self.blocks)[None, ...].float()
         self.zeros = torch.zeros_like(self.x)
         self.ones = torch.ones_like(self.x)
         EKOX(torch.mean(self.x))
@@ -70,9 +77,17 @@ class MainWindow(QMainWindow):
     def step(self) -> None :
         self.count += 1;
         with torch.no_grad():
-            output = self.conv(self.x)
+            z0 = self.x
+            z = self.conv(z0)
+            z1 = torch.clamp(z, self.zeros, self.ones)
+            pro = z1 - z0
+            rr = torch.randn_like(pro) > 0.5
+            z2 = pro * rr
+            z3 = z0 + z2
             #EKON(output.shape, self.zeros.shape, self.ones.shape)
-            self.x = torch.clamp(output, self.zeros, self.ones)
+
+            z3 = z3 * self.blocks
+            self.x = z3
         #EKOX(output.shape)
         imm = self.im.copy()
         #EKOX(torch.mean(self.x))
