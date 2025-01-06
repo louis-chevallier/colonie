@@ -58,6 +58,8 @@ class MainWindow(QMainWindow):
         self.im = self.black.copy()
         self.im[0,0] = 255
         self.x = torch.tensor(self.im)[None, ...].float() / 255
+
+        self.blk = torch.tensor(self.blocks)[None, ...].float()
         
         self.im = self.black
         self.im[h-1,w-1] = 255
@@ -79,7 +81,7 @@ class MainWindow(QMainWindow):
 
     def step(self) -> None :
         self.count += 1;
-        invert = self.count > 1000
+        invert = self.count > 2000 and (self.count // 1000) % 2 == 1
 
         def process(xy) :
             with torch.no_grad():
