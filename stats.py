@@ -11,7 +11,7 @@ X = np.arange(0, 1, 0.01)
 Y = np.arange(0, 1, 0.01)
 X, Y = np.meshgrid(X, Y)
 R = np.sqrt(X**2 + Y**2)
-Z = np.cos(R*2)
+Z = X / (X+Y) #np.cos(R*2)
 
 # Plot the surface.
 surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,

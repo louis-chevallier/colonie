@@ -72,10 +72,12 @@ class MainWindow(QMainWindow):
         
         nb_channels = 1
         h, w = 5, 5
+
+        K=7
         x = torch.randn(1, nb_channels, h, w)
-        weights = torch.tensor(np.ones(shape=(3,3))).float()
-        weights = weights.view(1, 1, 3, 3).repeat(1, nb_channels, 1, 1)       
-        self.conv = nn.Conv2d(nb_channels, 1, 3, bias=False, padding='same')
+        weights = torch.tensor(np.ones(shape=(K, K))).float()
+        weights = weights.view(1, 1, K, K).repeat(1, nb_channels, 1, 1)       
+        self.conv = nn.Conv2d(nb_channels, 1, K, bias=False, padding='same')
         with torch.no_grad():
             self.conv.weight = nn.Parameter(weights)
 
