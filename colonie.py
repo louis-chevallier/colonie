@@ -79,15 +79,21 @@ class MainWindow(QMainWindow):
 
     def step(self) -> None :
         self.count += 1;
+        invert = self.count > 1000
+
         def process(xy) :
             with torch.no_grad():
-                z0 = xy
+                ii = lambda _x : 1-_x if invert else _x
+                z0 = ii(xy)
                 z = self.conv(z0)
                 z1 = torch.clamp(z, self.zeros, self.ones)
                 pro = z1 - z0
-                rr = torch.randn_like(pro) > 0.5
+                rr = torch.randn_like(pro) > 1.5
                 z2 = pro * rr
                 z3 = z0 + z2
+
+                z3 = ii(z3)
+                
                 #EKON(output.shape, self.zeros.shape, self.ones.shape)
                 z3 = z3 * self.blocks
             return z3
